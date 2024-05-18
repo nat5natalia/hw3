@@ -1,0 +1,95 @@
+
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <limits>
+
+using namespace std;
+
+class FordFulkerson {
+private:
+    int V;
+    vector<vector<int>> capacity;
+    vector<vector<int>> flow;
+    vector<int> parent;
+
+public:
+    FordFulkerson(int V) {
+        this->V = V;
+        capacity.resize(V, vector<int>(V, 0));
+        flow.resize(V, vector<int>(V, 0));
+        parent.resize(V);
+    }
+
+    void addEdge(int u, int v, int cap) {
+        capacity[u][v] = cap;
+    }
+
+    bool bfs(int s, int t) {
+        vector<bool> visited(V, false);
+        queue<int> q;
+        q.push(s);
+        visited[s] = true;
+        parent[s] = -1;
+
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop();
+
+            for (int v = 0; v < V; v++) {
+                if (!visited[v] && capacity[u][v] - flow[u][v] > 0) {
+                    q.push(v);
+                    parent[v] = u;
+                    visited[v] = true;
+                }
+            }
+        }
+
+        return visited[t];
+    }
+
+    int fordFulkerson(int s, int t) {
+        int maxFlow = 0;
+
+        while (bfs(s, t)) {
+            int pathFlow = numeric_limits<int>::max();
+
+            for (int v = t; v != s; v = parent[v]) {
+                int u = parent[v];
+                pathFlow = min(pathFlow, capacity[u][v] - flow[u][v]);
+            }
+
+            for (int v = t; v != s; v = parent[v]) {
+                int u = parent[v];
+                flow[u][v] += pathFlow;
+                flow[v][u] -= pathFlow;
+            }
+
+            maxFlow += pathFlow;
+        }
+
+        return maxFlow;
+    }
+};
+
+int main() {
+    FordFulkerson graph(6);
+    graph.addEdge(0, 1, 16);
+    graph.addEdge(0, 2, 13);
+    graph.addEdge(1, 2, 10);
+    graph.addEdge(1, 3, 12);
+    graph.addEdge(2, 1, 4);
+    graph.addEdge(2, 4, 14);
+    graph.addEdge(3, 2, 9);
+    graph.addEdge(3, 5, 20);
+    graph.addEdge(4, 3, 7);
+    graph.addEdge(4, 5, 4);
+
+    int source = 0;
+    int sink = 5;
+    int maxFlow = graph.fordFulkerson(source, sink);
+
+    cout << "Max flow from source to sink is: " << maxFlow << endl;
+
+    return 0;
+}
